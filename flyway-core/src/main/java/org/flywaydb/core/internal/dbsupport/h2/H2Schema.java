@@ -31,16 +31,18 @@ import java.util.List;
  */
 public class H2Schema extends Schema<H2DbSupport> {
     private static final Log LOG = LogFactory.getLog(H2Schema.class);
+    private final boolean requiresV2Metadata;
 
     /**
      * Creates a new H2 schema.
-     *
-     * @param jdbcTemplate The Jdbc Template for communicating with the DB.
+     *  @param jdbcTemplate The Jdbc Template for communicating with the DB.
      * @param dbSupport    The database-specific support.
      * @param name         The name of the schema.
+     * @param requiresV2Metadata
      */
-    public H2Schema(JdbcTemplate jdbcTemplate, H2DbSupport dbSupport, String name) {
+    public H2Schema(JdbcTemplate jdbcTemplate, H2DbSupport dbSupport, String name, boolean requiresV2Metadata) {
         super(jdbcTemplate, dbSupport, name);
+        this.requiresV2Metadata = requiresV2Metadata;
     }
 
     @Override
@@ -69,7 +71,9 @@ public class H2Schema extends Schema<H2DbSupport> {
             table.drop();
         }
 
-        List<String> sequenceNames = listObjectNames("SEQUENCE", "IS_GENERATED = false");
+        String sequenceSuffix = requiresV2Metadata ? "" : "IS_GENERATED = false";
+
+        List<String> sequenceNames = listObjectNames("SEQUENCE", sequenceSuffix);
         for (String statement : generateDropStatements("SEQUENCE", sequenceNames, "")) {
             jdbcTemplate.execute(statement);
         }
@@ -132,7 +136,7 @@ public class H2Schema extends Schema<H2DbSupport> {
 
     @Override
     protected Table[] doAllTables() throws SQLException {
-        List<String> tableNames = listObjectNames("TABLE", "TABLE_TYPE = 'TABLE'");
+        List<String> tableNames = listObjectNames("TABLE", "TABLE_TYPE = " + (requiresV2Metadata ? "'BASE TABLE'" : "'TABLE'"));
 
         Table[] tables = new Table[tableNames.size()];
         for (int i = 0; i < tableNames.size(); i++) {

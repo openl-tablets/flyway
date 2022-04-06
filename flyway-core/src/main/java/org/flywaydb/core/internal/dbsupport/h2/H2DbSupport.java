@@ -15,14 +15,15 @@
  */
 package org.flywaydb.core.internal.dbsupport.h2;
 
+import org.flywaydb.core.api.MigrationVersion;
 import org.flywaydb.core.internal.dbsupport.DbSupport;
+import org.flywaydb.core.internal.dbsupport.FlywaySqlException;
 import org.flywaydb.core.internal.dbsupport.JdbcTemplate;
 import org.flywaydb.core.internal.dbsupport.Schema;
 import org.flywaydb.core.internal.dbsupport.SqlStatementBuilder;
-import org.flywaydb.core.internal.util.jdbc.JdbcUtils;
 
 import java.sql.Connection;
-import java.sql.ResultSet;
+import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
 
@@ -30,6 +31,8 @@ import java.sql.Types;
  * H2 database specific support
  */
 public class H2DbSupport extends DbSupport {
+    private final boolean requiresV2Metadata;
+
     /**
      * Creates a new instance.
      *
@@ -37,6 +40,14 @@ public class H2DbSupport extends DbSupport {
      */
     public H2DbSupport(Connection connection) {
         super(new JdbcTemplate(connection, Types.VARCHAR));
+        String version;
+        try {
+            DatabaseMetaData metaData = connection.getMetaData();
+            version = metaData.getDatabaseMajorVersion() + "." + metaData.getDriverMinorVersion();
+        } catch (SQLException e) {
+            throw new FlywaySqlException("Unable to determine the major version of the database", e);
+        }
+        requiresV2Metadata = MigrationVersion.fromVersion(version).compareTo(MigrationVersion.fromVersion("2.0.0")) >= 0;
     }
 
     public String getDbName() {
@@ -79,7 +90,7 @@ public class H2DbSupport extends DbSupport {
 
     @Override
     public Schema getSchema(String name) {
-        return new H2Schema(jdbcTemplate, this, name);
+        return new H2Schema(jdbcTemplate, this, name, requiresV2Metadata);
     }
 
     @Override
