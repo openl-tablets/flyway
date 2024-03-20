@@ -63,7 +63,17 @@ public class PostgreSQLDbSupport extends DbSupport {
     }
 
     /* private -> testing */ String getFirstSchemaFromSearchPath(String searchPath) {
-        String result = searchPath.replace(doQuote("$user"), "").trim();
+        String user;
+        try {
+            user = jdbcTemplate.getConnection() == null ? "" : jdbcTemplate.getMetaData().getUserName();
+        } catch (SQLException e) {
+            try {
+                user = jdbcTemplate.queryForString("SELECT CURRENT_USER;");
+            } catch (SQLException ex) {
+                user = "";
+            }
+        }
+        String result = searchPath.replace(doQuote("$user"), user).trim();
         if (result.startsWith(",")) {
             result = result.substring(1);
         }
