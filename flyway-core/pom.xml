@@ -42,7 +42,7 @@
     </parent>
     <groupId>org.openl</groupId>
     <artifactId>flyway-core</artifactId>
-    <version>4.2.0.2</version>
+    <version>4.2.0.3</version>
     <packaging>jar</packaging>
     <name>${project.artifactId}</name>
     <licenses>
@@ -274,6 +274,14 @@
                         <sourceFileInclude>**/core/Flyway.java</sourceFileInclude>
                         <sourceFileInclude>**/core/api/**/*.java</sourceFileInclude>
                     </sourceFileIncludes>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>8</source>
+                    <target>8</target>
                 </configuration>
             </plugin>
         </plugins>

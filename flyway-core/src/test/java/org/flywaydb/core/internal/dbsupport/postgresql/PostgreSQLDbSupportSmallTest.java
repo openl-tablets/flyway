@@ -27,9 +27,4 @@ public class PostgreSQLDbSupportSmallTest {
         assertEquals("\"abc\"", dbSupport.doQuote("abc"));
         assertEquals("\"a\"\"b\"\"c\"", dbSupport.doQuote("a\"b\"c"));
     }
-
-    @Test
-    public void getFirstSchemaFromSearchPath() {
-        assertEquals("ABC", dbSupport.getFirstSchemaFromSearchPath("\"ABC\", def"));
-    }
 }

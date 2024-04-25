@@ -54,43 +54,8 @@ public class PostgreSQLDbSupport extends DbSupport {
     }
 
     @Override
-    public Schema getOriginalSchema() {
-        if (originalSchema == null) {
-            return null;
-        }
-
-        return getSchema(getFirstSchemaFromSearchPath(this.originalSchema));
-    }
-
-    /* private -> testing */ String getFirstSchemaFromSearchPath(String searchPath) {
-        String user;
-        try {
-            user = jdbcTemplate.getConnection() == null ? "" : jdbcTemplate.getMetaData().getUserName();
-        } catch (SQLException e) {
-            try {
-                user = jdbcTemplate.queryForString("SELECT CURRENT_USER;");
-            } catch (SQLException ex) {
-                user = "";
-            }
-        }
-        String result = searchPath.replace(doQuote("$user"), user).trim();
-        if (result.startsWith(",")) {
-            result = result.substring(1);
-        }
-        if (result.contains(",")) {
-            result = result.substring(0, result.indexOf(","));
-        }
-        result = result.trim();
-        // Unquote if necessary
-        if (result.startsWith("\"") && result.endsWith("\"") && !result.endsWith("\\\"") && (result.length() > 1)) {
-            result = result.substring(1, result.length() - 1);
-        }
-        return result;
-    }
-
-    @Override
     protected String doGetCurrentSchemaName() throws SQLException {
-        return jdbcTemplate.queryForString("SHOW search_path");
+        return jdbcTemplate.getConnection().getSchema();
     }
 
     @Override
